@@ -45,10 +45,8 @@ uci commit
 FILE_PATH="/etc/openwrt_release"
 NEW_DESCRIPTION="W($(TZ=UTC-8 date +%Y.%m.%d))"
 sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
+
 # 设置密码为password
 sed -i 's/root:::0:99999:7:::/root:$1$iT2B9mTF$d5CTSuJLXZZzSPQYHqwqG.:19867:0:99999:7:::/' package/base-files/files/etc/shadow
-# git_sparse_clone main https://github.com/kiddin9/kwrt-packages luci-app-v2ray-server
-# 在线用户
-git_sparse_clone main https://github.com/kiddin9/kwrt-packages luci-app-onliner
-sudo chmod -Rf 755 package/luci-app-onliner
+
 exit 0
