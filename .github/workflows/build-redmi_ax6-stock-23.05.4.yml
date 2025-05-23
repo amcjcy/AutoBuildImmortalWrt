@@ -14,8 +14,7 @@ on:
           - redmi_ax6-stock
         default: redmi_ax6-stock
       include_docker:
-        description: |
-          是否编译 Docker 插件
+        description: "是否编译 Docker 插件"
         required: true
         default: 'no'
         type: choice
@@ -37,7 +36,6 @@ on:
         description: "宽带密码 (若启用PPPoE)"
         required: false
 
-
 jobs:
   build:
     runs-on: ubuntu-22.04
@@ -47,8 +45,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set executable permissions
-        run: |
-          chmod +x ${{ github.workspace }}/mediatek-filogic/build.sh
+        run: chmod +x ${{ github.workspace }}/mediatek-filogic/build.sh
 
       - name: Validate PPPoE Inputs
         run: |
@@ -58,13 +55,12 @@ jobs:
               exit 1
             fi
           fi
-      
 
-      - name: Build redmi_ax6-stock ImmortalWrt 23.05.4
+      - name: Build ImmortalWrt 23.05.4
         run: |
           profiles="${{ github.event.inputs.profile }}"
           include_docker="${{ github.event.inputs.include_docker }}"
-    
+
           if [ "$profiles" = "redmi_ax6-stock" ]; then
             tag=ipq807x-generic-openwrt-23.05.4
             echo "platform=ipq807x/generic" >> $GITHUB_ENV
@@ -91,34 +87,34 @@ jobs:
               immortalwrt/imagebuilder:$tag /bin/bash /home/build/immortalwrt/build.sh
           done
 
+      - name: Collect all firmware files
+        run: |
+          mkdir -p ${{ github.workspace }}/release_files
+          cp -r ${{ github.workspace }}/bin/targets/${{ env.platform }}/* ${{ github.workspace }}/release_files/
+
       - name: Generate Firmware SHA-256
         run: |
-          cp ${{ github.workspace }}/bin/targets/${{ env.platform }}/*.bin ${{ github.workspace }}
+          cd ${{ github.workspace }}/release_files
           for file in *.bin; do
             sha256sum "$file" > "$file.sha256"
             sha256sum -c "$file.sha256"
           done
 
-      - name: Create info
+      - name: Create info (optional)
         run: |
           if [ "${{ github.event.inputs.include_docker }}" == "yes" ]; then
-            extra_content="### 默认带docker"
-            echo -e "\n $extra_content" >> ${{ github.workspace }}/mediatek-filogic/info.md
+            echo "### 默认带docker" > ${{ github.workspace }}/release_files/info.md
           else
-            echo -e "NO docker"
+            echo "### 无docker" > ${{ github.workspace }}/release_files/info.md
           fi
-          
+
       - name: Upload ImmortalWrt as release assets
         uses: softprops/action-gh-release@v2.2.1
         with:
-          tag_name: Autobuild-GL-iNet
-          name: ImmortalWrt-GL-iNet
-          body_path: ${{ github.workspace }}/mediatek-filogic/info.md
-          files: |
-            ${{ github.workspace }}/*.bin
-            ${{ github.workspace }}/*.ubi
-            ${{ github.workspace }}/*.txt
-            ${{ github.workspace }}/*.sha256
+          tag_name: Autobuild-${{ github.event.inputs.profile }}
+          name: ImmortalWrt-${{ github.event.inputs.profile }}
+          body_path: ${{ github.workspace }}/release_files/info.md
+          files: ${{ github.workspace }}/release_files/*
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
