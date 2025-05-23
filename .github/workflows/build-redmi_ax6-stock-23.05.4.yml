@@ -49,8 +49,8 @@ jobs:
 
       - name: Validate PPPoE Inputs
         run: |
-          if [[ "${{ inputs.enable_pppoe }}" == "yes" ]]; then
-            if [[ -z "${{ inputs.pppoe_account }}" || -z "${{ inputs.pppoe_password }}" ]]; then
+          if [[ "${{ github.event.inputs.enable_pppoe }}" == "yes" ]]; then
+            if [[ -z "${{ github.event.inputs.pppoe_account }}" || -z "${{ github.event.inputs.pppoe_password }}" ]]; then
               echo "Error: PPPoE account and password must be provided when PPPoE is enabled!"
               exit 1
             fi
@@ -86,7 +86,7 @@ jobs:
               -e PPPOE_PASSWORD=${{ inputs.pppoe_password }} \
               immortalwrt/imagebuilder:$tag /bin/bash /home/build/immortalwrt/build.sh
 
-      - name: Collect and rename firmware files with timestamp
+      - name: Collect and rename firmware files
         run: |
           mkdir -p ${{ github.workspace }}/release_files
           timestamp=$(date +'%Y-%m-%d-%H-%M-%S')
@@ -95,7 +95,7 @@ jobs:
 
           for file in *.bin *.ubi 2>/dev/null; do
             [ -e "$file" ] || continue
-            newname="${timestamp}-${file}"
+            newname="${timestamp}-${{ github.event.inputs.profile }}-${file}"
             cp "$file" "${{ github.workspace }}/release_files/$newname"
           done
 
@@ -107,7 +107,7 @@ jobs:
             sha256sum -c "$file.sha256"
           done
 
-      - name: Upload ImmortalWrt as release assets
+      - name: Upload firmware as GitHub Release
         uses: softprops/action-gh-release@v2.2.1
         with:
           tag_name: Autobuild-${{ env.release_timestamp }}
