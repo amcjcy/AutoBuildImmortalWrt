@@ -43,10 +43,10 @@ uci commit
 
 # 设置编译作者信息
 FILE_PATH="/etc/openwrt_release"
-NEW_DESCRIPTION="W($(TZ=UTC-8 date +%Y.%m.%d))"
+NEW_DESCRIPTION="W - $(TZ=UTC-8 date +%Y.%m.%d)"
 sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
 
 # 设置密码为password
-sed -i 's/root:::0:99999:7:::/root:$1$iT2B9mTF$d5CTSuJLXZZzSPQYHqwqG.:19867:0:99999:7:::/' package/base-files/files/etc/shadow
+sed -i 's/root:::0:99999:7:::/root:$1$iT2B9mTF$d5CTSuJLXZZzSPQYHqwqG.:19867:0:99999:7:::/' /etc/shadow
 
 exit 0
