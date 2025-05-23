@@ -12,7 +12,7 @@ on:
           - glinet_gl-mt2500
           - glinet_gl-mt6000
           - redmi_ax6-stock
-        default: glinet_gl-mt3000
+        default: redmi_ax6-stock
       include_docker:
         description: |
           是否编译 Docker 插件
@@ -25,7 +25,7 @@ on:
       enable_pppoe:
         description: "是否配置PPPoE拨号信息?"
         required: true
-        default: 'no'
+        default: 'yes'
         type: choice
         options:
           - 'yes'
@@ -60,7 +60,7 @@ jobs:
           fi
       
 
-      - name: Build Gl-iNet ImmortalWrt 23.05.4
+      - name: Build redmi_ax6-stock ImmortalWrt 23.05.4
         run: |
           profiles="${{ github.event.inputs.profile }}"
           include_docker="${{ github.event.inputs.include_docker }}"
