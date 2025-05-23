@@ -1,4 +1,4 @@
-name: build-ax6-23.05.4 ImmortalWrt
+name: build-redmi_ax6-stock-23.05.4 ImmortalWrt
 
 on:
   workflow_dispatch:
