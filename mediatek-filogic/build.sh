@@ -40,6 +40,7 @@ PACKAGES="$PACKAGES luci-i18n-ddns-zh-cn"
 PACKAGES="$PACKAGES ddns-scripts-cloudflare"
 # PACKAGES="$PACKAGES luci-i18n-v2ray-server-zh-cn"
 PACKAGES="$PACKAGES luci-i18n-ramfree-zh-cn"
+PACKAGES="$PACKAGES luci-i18n-turboacc-zh-cn"
 
 # 增加几个必备组件 方便用户安装iStore
 # PACKAGES="$PACKAGES fdisk"
