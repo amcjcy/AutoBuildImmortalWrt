@@ -35,6 +35,12 @@ PACKAGES="$PACKAGES luci-i18n-opkg-zh-cn"
 # PACKAGES="$PACKAGES luci-app-openclash"
 PACKAGES="$PACKAGES luci-i18n-homeproxy-zh-cn"
 PACKAGES="$PACKAGES openssh-sftp-server"
+PACKAGES="$PACKAGES luci-i18n-nps-zh-cn"
+PACKAGES="$PACKAGES luci-i18n-ddns-zh-cn"
+PACKAGES="$PACKAGES ddns-scripts-cloudflare"
+PACKAGES="$PACKAGES luci-i18n-v2ray-server-zh-cn"
+PACKAGES="$PACKAGES luci-i18n-ramfree-zh-cn"
+
 # 增加几个必备组件 方便用户安装iStore
 # PACKAGES="$PACKAGES fdisk"
 # PACKAGES="$PACKAGES script-utils"
