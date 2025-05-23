@@ -11,7 +11,7 @@ on:
           - glinet_gl-mt3000
           - glinet_gl-mt2500
           - glinet_gl-mt6000
-          - redmi_ax6
+          - redmi_ax6-stock
         default: glinet_gl-mt3000
       include_docker:
         description: |
@@ -65,7 +65,7 @@ jobs:
           profiles="${{ github.event.inputs.profile }}"
           include_docker="${{ github.event.inputs.include_docker }}"
     
-          if [ "$profiles" = "redmi_ax6" ]; then
+          if [ "$profiles" = "redmi_ax6-stock" ]; then
             tag=ipq807x-generic-openwrt-23.05.4
             echo "platform=ipq807x/generic" >> $GITHUB_ENV
           else
