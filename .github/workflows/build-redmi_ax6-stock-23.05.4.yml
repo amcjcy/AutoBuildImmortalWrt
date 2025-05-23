@@ -85,36 +85,37 @@ jobs:
               -e PPPOE_ACCOUNT=${{ inputs.pppoe_account }} \
               -e PPPOE_PASSWORD=${{ inputs.pppoe_password }} \
               immortalwrt/imagebuilder:$tag /bin/bash /home/build/immortalwrt/build.sh
-          done
 
-      - name: Collect all firmware files
+      - name: Collect and rename firmware files
         run: |
           mkdir -p ${{ github.workspace }}/release_files
-          cp -r ${{ github.workspace }}/bin/targets/${{ env.platform }}/* ${{ github.workspace }}/release_files/
+          timestamp=$(date +'%Y-%m-%d-%H-%M-%S')
+          echo "release_timestamp=$timestamp" >> $GITHUB_ENV
+          cd ${{ github.workspace }}/bin/targets/${{ env.platform }}
 
-      - name: Generate Firmware SHA-256
+          for file in *.bin *.ubi 2>/dev/null; do
+            [ -e "$file" ] || continue
+            newname="${timestamp}-${{ github.event.inputs.profile }}-${file}"
+            cp "$file" "${{ github.workspace }}/release_files/$newname"
+          done
+
+      - name: Generate SHA-256 checksums
         run: |
           cd ${{ github.workspace }}/release_files
-          for file in *.bin; do
+          for file in *.bin *.ubi; do
             sha256sum "$file" > "$file.sha256"
             sha256sum -c "$file.sha256"
           done
 
-      - name: Create info (optional)
-        run: |
-          if [ "${{ github.event.inputs.include_docker }}" == "yes" ]; then
-            echo "### 默认带docker" > ${{ github.workspace }}/release_files/info.md
-          else
-            echo "### 无docker" > ${{ github.workspace }}/release_files/info.md
-          fi
-
-      - name: Upload ImmortalWrt as release assets
+      - name: Upload firmware as GitHub Release
         uses: softprops/action-gh-release@v2.2.1
         with:
-          tag_name: Autobuild-${{ github.event.inputs.profile }}
-          name: ImmortalWrt-${{ github.event.inputs.profile }}
-          body_path: ${{ github.workspace }}/release_files/info.md
-          files: ${{ github.workspace }}/release_files/*
+          tag_name: Autobuild-${{ env.release_timestamp }}
+          name: ImmortalWrt-${{ github.event.inputs.profile }}-${{ env.release_timestamp }}
+          files: |
+            ${{ github.workspace }}/release_files/*.bin
+            ${{ github.workspace }}/release_files/*.ubi
+            ${{ github.workspace }}/release_files/*.sha256
           token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
