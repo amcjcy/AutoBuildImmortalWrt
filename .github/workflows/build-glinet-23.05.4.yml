@@ -1,4 +1,4 @@
-name: build-gl-inet-23.05.4 ImmortalWrt
+name: build-ax6-23.05.4 ImmortalWrt
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ on:
           - glinet_gl-mt3000
           - glinet_gl-mt2500
           - glinet_gl-mt6000
-          - glinet_gl-b2200
+          - redmi_ax6
         default: glinet_gl-mt3000
       include_docker:
         description: |
@@ -65,9 +65,9 @@ jobs:
           profiles="${{ github.event.inputs.profile }}"
           include_docker="${{ github.event.inputs.include_docker }}"
     
-          if [ "$profiles" = "glinet_gl-b2200" ]; then
-            tag=ipq40xx-generic-openwrt-23.05.4
-            echo "platform=ipq40xx/generic" >> $GITHUB_ENV
+          if [ "$profiles" = "redmi_ax6" ]; then
+            tag=ipq807x-generic-openwrt-23.05.4
+            echo "platform=ipq807x/generic" >> $GITHUB_ENV
           else
             tag=mediatek-filogic-openwrt-23.05.4
             echo "platform=mediatek/filogic" >> $GITHUB_ENV
