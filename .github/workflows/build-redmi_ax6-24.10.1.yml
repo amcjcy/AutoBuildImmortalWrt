@@ -1,20 +1,41 @@
-name: build-redmi_ax6-24.10.1
-
+name: build-redmi_ax6-stock-24.10.1
 on:
   workflow_dispatch:
     inputs:
-      enable_pppoe:
-        description: "是否配置 PPPoE 拨号信息？"
-        required: true
-        default: 'yes'
+      profile:
         type: choice
-        options: ['yes', 'no']
+        description: "请选择路由器型号"
+        required: true
+        options:
+          - glinet_gl-mt3000
+          - glinet_gl-mt2500
+          - glinet_gl-mt6000
+          - redmi_ax6-stock
+        default: redmi_ax6-stock
+      include_docker:
+        description: |
+          是否编译 Docker 插件
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
+      enable_pppoe:
+        description: "是否配置PPPoE拨号信息?"
+        required: true
+        default: 'no'
+        type: choice
+        options:
+          - 'yes'
+          - 'no'
       pppoe_account:
-        description: "宽带账号 (若启用 PPPoE)"
+        description: "宽带账号 (若启用PPPoE)"
         required: false
       pppoe_password:
-        description: "宽带密码 (若启用 PPPoE)"
+        description: "宽带密码 (若启用PPPoE)"
         required: false
+
 
 jobs:
   build:
@@ -24,80 +45,77 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Set executable permissions
+        run: |
+          chmod +x ${{ github.workspace }}/mediatek-filogic/build.sh
+
       - name: Validate PPPoE Inputs
         run: |
-          if [[ "${{ github.event.inputs.enable_pppoe }}" == "yes" ]]; then
-            if [[ -z "${{ github.event.inputs.pppoe_account }}" || -z "${{ github.event.inputs.pppoe_password }}" ]]; then
+          if [[ "${{ inputs.enable_pppoe }}" == "yes" ]]; then
+            if [[ -z "${{ inputs.pppoe_account }}" || -z "${{ inputs.pppoe_password }}" ]]; then
               echo "Error: PPPoE account and password must be provided when PPPoE is enabled!"
               exit 1
             fi
           fi
+      
 
-      - name: Set platform
-        run: echo "platform=ipq807x/generic" >> $GITHUB_ENV
-
-      - name: Build Firmware
+      - name: Build Gl-iNet ImmortalWrt 24.10.1
         run: |
-          profile="redmi_ax6"
-          tag="ipq807x-generic-openwrt-24.10.1"
-          docker run --rm -i \
-            --user root \
-            -v "${{ github.workspace }}/bin:/home/build/immortalwrt/bin" \
-            -v "${{ github.workspace }}/glinet:/home/build/immortalwrt/files/etc/uci-defaults" \
-            -v "${{ github.workspace }}/mediatek-filogic/build-24.sh:/home/build/immortalwrt/build.sh" \
-            -e PROFILE=$profile \
-            -e ENABLE_PPPOE=${{ github.event.inputs.enable_pppoe }} \
-            -e PPPOE_ACCOUNT=${{ github.event.inputs.pppoe_account }} \
-            -e PPPOE_PASSWORD=${{ github.event.inputs.pppoe_password }} \
-            immortalwrt/imagebuilder:$tag /bin/bash /home/build/immortalwrt/build.sh
-
-      - name: Collect and rename firmware files
-        run: |
-          mkdir -p ${{ github.workspace }}/release_files
-          timestamp=$(date +'%Y-%m-%d-%H-%M-%S')
-          echo "release_timestamp=$timestamp" >> $GITHUB_ENV
-          cd ${{ github.workspace }}/bin/targets/${{ env.platform }}
-          shopt -s nullglob
-          for file in *.bin *.ubi; do
-            cp "$file" "${{ github.workspace }}/release_files/${timestamp}-redmi_ax6-${file}"
+          profiles="${{ github.event.inputs.profile }}"
+          include_docker="${{ github.event.inputs.include_docker }}"
+    
+          if [ "$profiles" = "redmi_ax6-stock" ]; then
+            tag=ipq40xx-generic-openwrt-24.10.1
+            echo "platform=ipq807x/generic" >> $GITHUB_ENV
+          else
+            tag=mediatek-filogic-openwrt-24.10.1
+            echo "platform=mediatek/filogic" >> $GITHUB_ENV
+          fi
+          
+          IFS=',' read -r -a profile_array <<< "$profiles"
+          
+          for profile in "${profile_array[@]}"; do
+            echo "Building for profile: $profile"
+            
+            docker run --rm -i \
+              --user root \
+              -v "${{ github.workspace }}/bin:/home/build/immortalwrt/bin" \
+              -v "${{ github.workspace }}/glinet:/home/build/immortalwrt/files/etc/uci-defaults" \
+              -v "${{ github.workspace }}/mediatek-filogic/build-24.sh:/home/build/immortalwrt/build.sh" \
+              -e PROFILE=$profile \
+              -e INCLUDE_DOCKER=$include_docker \
+              -e ENABLE_PPPOE=${{ inputs.enable_pppoe }} \
+              -e PPPOE_ACCOUNT=${{ inputs.pppoe_account }} \
+              -e PPPOE_PASSWORD=${{ inputs.pppoe_password }} \
+              immortalwrt/imagebuilder:$tag /bin/bash /home/build/immortalwrt/build.sh
           done
 
-      - name: Generate SHA-256 checksums
+      - name: Generate Firmware SHA-256
         run: |
-          cd ${{ github.workspace }}/release_files
-          for file in *.bin *.ubi; do
+          cp ${{ github.workspace }}/bin/targets/${{ env.platform }}/*.bin ${{ github.workspace }}
+          for file in *.bin; do
             sha256sum "$file" > "$file.sha256"
             sha256sum -c "$file.sha256"
           done
 
-      - name: Upload firmware
+      - name: Create info
+        run: |
+          if [ "${{ github.event.inputs.include_docker }}" == "yes" ]; then
+            extra_content="### 默认带docker"
+            echo -e "\n $extra_content" >> ${{ github.workspace }}/mediatek-filogic/info.md
+          else
+            echo -e "NO docker"
+          fi
+          
+      - name: Upload ImmortalWrt as release assets
         uses: softprops/action-gh-release@v2.2.1
         with:
-          tag_name: Autobuild-${{ env.release_timestamp }}
-          name: ImmortalWrt-redmi_ax6-${{ env.release_timestamp }}
+          tag_name: Autobuild-GL-iNet
+          name: ImmortalWrt-GL-iNet
+          body_path: ${{ github.workspace }}/mediatek-filogic/info.md
           files: |
-            ${{ github.workspace }}/release_files/*.bin
-            ${{ github.workspace }}/release_files/*.ubi
-            ${{ github.workspace }}/release_files/*.sha256
+            ${{ github.workspace }}/*.bin
+            ${{ github.workspace }}/*.sha256
+          token: ${{ secrets.GITHUB_TOKEN }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Delete old releases (keep 5)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api repos/${{ github.repository }}/releases \
-            --paginate | jq -r '.[].id' | tail -n +6 | while read id; do
-              echo "Deleting release ID: $id"
-              gh api repos/${{ github.repository }}/releases/$id -X DELETE
-          done
-
-      - name: Delete old workflow runs (keep 5)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh api repos/${{ github.repository }}/actions/runs \
-            --paginate | jq -r '.workflow_runs[].id' | tail -n +6 | while read run_id; do
-              echo "Deleting workflow run ID: $run_id"
-              gh api repos/${{ github.repository }}/actions/runs/$run_id -X DELETE
-          done
