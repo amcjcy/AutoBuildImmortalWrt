@@ -1,4 +1,5 @@
 name: build-redmi_ax6-stock-24.10.1
+
 on:
   workflow_dispatch:
     inputs:
@@ -13,8 +14,7 @@ on:
           - redmi_ax6-stock
         default: redmi_ax6-stock
       include_docker:
-        description: |
-          是否编译 Docker 插件
+        description: "是否编译 Docker 插件"
         required: true
         default: 'no'
         type: choice
@@ -24,7 +24,7 @@ on:
       enable_pppoe:
         description: "是否配置PPPoE拨号信息?"
         required: true
-        default: 'no'
+        default: 'yes'
         type: choice
         options:
           - 'yes'
@@ -35,7 +35,6 @@ on:
       pppoe_password:
         description: "宽带密码 (若启用PPPoE)"
         required: false
-
 
 jobs:
   build:
@@ -57,26 +56,25 @@ jobs:
               exit 1
             fi
           fi
-      
 
-      - name: Build Gl-iNet ImmortalWrt 24.10.1
+      - name: Build ImmortalWrt 24.10.1
         run: |
           profiles="${{ github.event.inputs.profile }}"
           include_docker="${{ github.event.inputs.include_docker }}"
-    
+
           if [ "$profiles" = "redmi_ax6-stock" ]; then
-            tag=qualcommax-ipq807x-generic-openwrt-24.10.1
-            echo "platform=qualcommax-ipq807x/generic" >> $GITHUB_ENV
+            tag=qualcommax-ipq807x-openwrt-24.10.1
+            echo "platform=qualcommax-ipq807x/redmi_ax6-stock" >> $GITHUB_ENV
           else
             tag=mediatek-filogic-openwrt-24.10.1
             echo "platform=mediatek/filogic" >> $GITHUB_ENV
           fi
-          
+
           IFS=',' read -r -a profile_array <<< "$profiles"
-          
+
           for profile in "${profile_array[@]}"; do
             echo "Building for profile: $profile"
-            
+
             docker run --rm -i \
               --user root \
               -v "${{ github.workspace }}/bin:/home/build/immortalwrt/bin" \
@@ -102,11 +100,11 @@ jobs:
         run: |
           if [ "${{ github.event.inputs.include_docker }}" == "yes" ]; then
             extra_content="### 默认带docker"
-            echo -e "\n $extra_content" >> ${{ github.workspace }}/mediatek-filogic/info.md
+            echo -e "\n$extra_content" >> ${{ github.workspace }}/mediatek-filogic/info.md
           else
             echo -e "NO docker"
           fi
-          
+
       - name: Upload ImmortalWrt as release assets
         uses: softprops/action-gh-release@v2.2.1
         with:
