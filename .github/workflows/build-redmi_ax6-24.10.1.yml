@@ -65,7 +65,7 @@ jobs:
           include_docker="${{ github.event.inputs.include_docker }}"
     
           if [ "$profiles" = "redmi_ax6-stock" ]; then
-            tag=ipq40xx-generic-openwrt-24.10.1
+            tag=ipq807x-generic-openwrt-24.10.1
             echo "platform=ipq807x/generic" >> $GITHUB_ENV
           else
             tag=mediatek-filogic-openwrt-24.10.1
