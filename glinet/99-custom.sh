@@ -43,7 +43,8 @@ uci commit
 
 # 设置编译作者信息
 FILE_PATH="/etc/openwrt_release"
-NEW_DESCRIPTION="W($(TZ=UTC-8 date +%Y.%m.%d))@immortalwrt"
+# NEW_DESCRIPTION="W($(TZ=UTC-8 date +%Y.%m.%d))@immortalwrt"
+NEW_DESCRIPTION="W(2024.5.24)@immortalwrt"
 sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
 
 # 设置密码为password
