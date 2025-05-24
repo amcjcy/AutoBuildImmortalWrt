@@ -1,4 +1,4 @@
-name: build-redmi_ax6-stock-23.05.4
+name: build-redmi_ax6-stock
 
 on:
   workflow_dispatch:
@@ -8,17 +8,13 @@ on:
         required: true
         default: 'no'
         type: choice
-        options:
-          - 'yes'
-          - 'no'
+        options: ['yes', 'no']
       enable_pppoe:
         description: "是否配置PPPoE拨号信息?"
         required: true
         default: 'yes'
         type: choice
-        options:
-          - 'yes'
-          - 'no'
+        options: ['yes', 'no']
       pppoe_account:
         description: "宽带账号 (若启用PPPoE)"
         required: false
@@ -34,9 +30,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set executable permissions
-        run: chmod +x ${{ github.workspace }}/mediatek-filogic/build.sh
-
       - name: Validate PPPoE Inputs
         run: |
           if [[ "${{ github.event.inputs.enable_pppoe }}" == "yes" ]]; then
@@ -46,13 +39,13 @@ jobs:
             fi
           fi
 
-      - name: Build redmi_ax6-stock ImmortalWrt 23.05.4
-        run: |
-          echo "platform=ipq807x/generic" >> $GITHUB_ENV
-          tag=ipq807x-generic-openwrt-23.05.4
-          profile=redmi_ax6-stock
+      - name: Set platform
+        run: echo "platform=ipq807x/generic" >> $GITHUB_ENV
 
-          echo "Building for profile: $profile"
+      - name: Build Firmware
+        run: |
+          profile="redmi_ax6-stock"
+          tag="ipq807x-generic-openwrt-23.05.4"
           docker run --rm -i \
             --user root \
             -v "${{ github.workspace }}/bin:/home/build/immortalwrt/bin" \
@@ -71,11 +64,9 @@ jobs:
           timestamp=$(date +'%Y-%m-%d-%H-%M-%S')
           echo "release_timestamp=$timestamp" >> $GITHUB_ENV
           cd ${{ github.workspace }}/bin/targets/${{ env.platform }}
-
           shopt -s nullglob
           for file in *.bin *.ubi; do
-            newname="${timestamp}-redmi_ax6-stock-${file}"
-            cp "$file" "${{ github.workspace }}/release_files/$newname"
+            cp "$file" "${{ github.workspace }}/release_files/${timestamp}-redmi_ax6-stock-${file}"
           done
 
       - name: Generate SHA-256 checksums
@@ -84,4 +75,16 @@ jobs:
           for file in *.bin *.ubi; do
             sha256sum "$file" > "$file.sha256"
             sha256sum -c "$file.sha256"
-          don
+          done
+
+      - name: Upload firmware
+        uses: softprops/action-gh-release@v2.2.1
+        with:
+          tag_name: Autobuild-${{ env.release_timestamp }}
+          name: ImmortalWrt-redmi_ax6-stock-${{ env.release_timestamp }}
+          files: |
+            ${{ github.workspace }}/release_files/*.bin
+            ${{ github.workspace }}/release_files/*.ubi
+            ${{ github.workspace }}/release_files/*.sha256
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
