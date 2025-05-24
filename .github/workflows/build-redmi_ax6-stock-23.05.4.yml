@@ -83,4 +83,5 @@ jobs:
           cd ${{ github.workspace }}/release_files
           for file in *.bin *.ubi; do
             sha256sum "$file" > "$file.sha256"
-            sha256sum -c "
+            sha256sum -c "$file.sha256"
+          don
