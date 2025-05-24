@@ -62,13 +62,13 @@ jobs:
           profiles="${{ github.event.inputs.profile }}"
           include_docker="${{ github.event.inputs.include_docker }}"
 
-if [ "$profiles" = "redmi_ax6-stock" ]; then
-  tag=qualcommax-ipq807x-openwrt-24.10.1
-  echo "platform=qualcommax-ipq807x/generic" >> $GITHUB_ENV
-else
-  tag=mediatek-filogic-openwrt-24.10.1
-  echo "platform=mediatek/filogic" >> $GITHUB_ENV
-fi
+          if [ "$profiles" = "redmi_ax6-stock" ]; then
+            tag=qualcommax-ipq807x-openwrt-24.10.1
+            echo "platform=qualcommax-ipq807x/generic" >> $GITHUB_ENV
+          else
+            tag=mediatek-filogic-openwrt-24.10.1
+            echo "platform=mediatek/filogic" >> $GITHUB_ENV
+          fi
 
           IFS=',' read -r -a profile_array <<< "$profiles"
 
