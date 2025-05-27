@@ -40,28 +40,23 @@ if [ "$count" -eq 1 ]; then
    # 单网口设备 不支持修改ip 不要在此处修改ip 
    uci set network.lan.proto='dhcp'
 elif [ "$count" -gt 1 ]; then
-   # 提取第一个接口作为WAN
-   wan_ifname=$(echo "$ifnames" | awk '{print $1}')
-   # 剩余接口保留给LAN
-   lan_ifnames=$(echo "$ifnames" | cut -d ' ' -f2-)
+   # 强制指定eth3为WAN接口
+   wan_ifname="eth3"
+   # 剩余接口保留给LAN（排除eth3）
+   lan_ifnames=$(echo "$ifnames" | sed "s/\b$wan_ifname\b//g" | awk '{$1=$1};1')
    # 设置WAN接口基础配置
    uci set network.wan=interface
-   # 提取第一个接口作为WAN
    uci set network.wan.device="$wan_ifname"
-   # WAN接口默认DHCP
    uci set network.wan.proto='dhcp'
-   # 设置WAN6绑定网口eth0
+   # 设置WAN6绑定网口eth3
    uci set network.wan6=interface
    uci set network.wan6.device="$wan_ifname"
    # 更新LAN接口成员
-   # 查找对应设备的section名称
    section=$(uci show network | awk -F '[.=]' '/\.@?device\[\d+\]\.name=.br-lan.$/ {print $2; exit}')
    if [ -z "$section" ]; then
       echo "error：cannot find device 'br-lan'." >> $LOGFILE
    else
-      # 删除原来的ports列表
       uci -q delete "network.$section.ports"
-      # 添加新的ports列表
       for port in $lan_ifnames; do
          uci add_list "network.$section.ports"="$port"
       done
@@ -69,10 +64,9 @@ elif [ "$count" -gt 1 ]; then
    fi
    # LAN口设置静态IP
    uci set network.lan.proto='static'
-   # 多网口设备 支持修改为别的ip地址
-   uci set network.lan.ipaddr='192.168.100.1'
+   uci set network.lan.ipaddr='192.168.4.1'
    uci set network.lan.netmask='255.255.255.0'
-   echo "set 192.168.100.1 at $(date)" >> $LOGFILE
+   echo "set 192.168.4.1 at $(date)" >> $LOGFILE
    # 判断是否启用 PPPoE
    echo "print enable_pppoe value=== $enable_pppoe" >> $LOGFILE
    if [ "$enable_pppoe" = "yes" ]; then
@@ -108,7 +102,7 @@ sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "
 # sed -i "s/OPENWRT_RELEASE=\"ImmortalWrt/OPENWRT_RELEASE=\"W(2024.5.24)@ImmortalWrt/" /etc/os-release
 
 # 设置密码为password
-sed -i 's/root:::0:99999:7:::/root:$1$Ws0gLZkB$MHD1JmjVvEtbgzJZHO.kW.:19867:0:99999:7:::/' /etc/shadow
+sed -i 's/root:::0:99999:7:::/root:$1$KnJ4TM.n$ENbekTUmENulhsX6pSm.w0:19268:0:99999:7:::/' /etc/shadow
 # 修正连接数
 sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' /etc/sysctl.conf
 
