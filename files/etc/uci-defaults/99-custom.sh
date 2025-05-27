@@ -101,7 +101,15 @@ uci commit
 
 # 设置编译作者信息
 FILE_PATH="/etc/openwrt_release"
-NEW_DESCRIPTION="Compiled by wukongdaily"
+NEW_DESCRIPTION="W($(TZ=UTC-8 date +%Y.%m.%d))@immortalwrt"
+# NEW_DESCRIPTION="W(2024.5.24)@immortalwrt"
 sed -i "s/DISTRIB_DESCRIPTION='[^']*'/DISTRIB_DESCRIPTION='$NEW_DESCRIPTION'/" "$FILE_PATH"
+# sed -i "s/OPENWRT_RELEASE=\"ImmortalWrt/OPENWRT_RELEASE=\"$(date +%Y-%m-%d) ImmortalWrt/" /etc/os-release
+# sed -i "s/OPENWRT_RELEASE=\"ImmortalWrt/OPENWRT_RELEASE=\"W(2024.5.24)@ImmortalWrt/" /etc/os-release
+
+# 设置密码为password
+sed -i 's/root:::0:99999:7:::/root:$1$Ws0gLZkB$MHD1JmjVvEtbgzJZHO.kW.:19867:0:99999:7:::/' /etc/shadow
+# 修正连接数
+sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' /etc/sysctl.conf
 
 exit 0
