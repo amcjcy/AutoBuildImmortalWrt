@@ -53,5 +53,6 @@ sed -i "s/OPENWRT_RELEASE=\"ImmortalWrt/OPENWRT_RELEASE=\"W(2024.5.24)@ImmortalW
 sed -i 's/root:::0:99999:7:::/root:$1$iT2B9mTF$d5CTSuJLXZZzSPQYHqwqG.:19867:0:99999:7:::/' /etc/shadow
 # 修正连接数
 sed -i '/customized in this file/a net.netfilter.nf_conntrack_max=65535' /etc/sysctl.conf
+echo "net.netfilter.nf_conntrack_max=65535" >> /etc/sysctl.conf
 
 exit 0
